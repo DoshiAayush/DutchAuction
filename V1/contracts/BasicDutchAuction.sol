@@ -27,7 +27,6 @@ contract BasicDutchAuction {
     }
 
     function placeBid() external payable {
-       
         require(msg.value >= currentPrice, "Bid amount is less than the current price");
         require(!auctionEnded, "Auction has already ended");
 
@@ -40,6 +39,5 @@ contract BasicDutchAuction {
 
         currentPrice -= offerPriceDecrement;
 
-      
     }
 }
