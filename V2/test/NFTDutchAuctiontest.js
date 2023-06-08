@@ -69,8 +69,8 @@ describe("NFTDutchAuction", function () {
     // Place a bid below the reserve price
     const bidAmount = reservePrice - 10;
     await nftDutchAuction.bid(bidAmount);
-    
-    
+
+
   });
 
   it("should revert if trying to start the auction again", async function () {
@@ -112,4 +112,7 @@ describe("NFTDutchAuction", function () {
     const owner = await nftContract.ownerOf(ERC721TokenId);
     expect(owner).to.equal(await ethers.provider.getSigner().getAddress());
   });
+  
+  
+
 });

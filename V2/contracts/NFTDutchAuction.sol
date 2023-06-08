@@ -31,6 +31,7 @@ contract NFTDutchAuction {
         auctionEndTime = block.number + numBlocksAuctionOpen;
     }
 
+
     function bid(uint256 _price) external {
         require(auctionEndTime > 0, "Auction not started");
         require(block.number < auctionEndTime, "Auction has ended");
@@ -39,6 +40,7 @@ contract NFTDutchAuction {
             // Bid meets either the reserve price or the time-based minimum price
             nftContract.transferFrom(address(this), msg.sender, nftTokenId);
         }
+
         auctionEndTime -= offerPriceDecrement;
     }
 }
