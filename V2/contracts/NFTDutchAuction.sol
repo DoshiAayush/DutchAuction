@@ -34,7 +34,6 @@ contract NFTDutchAuction {
 
     function bid(uint256 _price) external {
         require(auctionEndTime > 0, "Auction not started");
-        require(block.number < auctionEndTime, "Auction has ended");
 
         if (_price >= reservePrice || _price >= auctionEndTime - block.number) {
             // Bid meets either the reserve price or the time-based minimum price

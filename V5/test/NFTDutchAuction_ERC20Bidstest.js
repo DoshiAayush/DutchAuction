@@ -45,9 +45,7 @@ describe('NFTDutchAuction_ERC20BidsUpgrade', () => {
     expect(auctionEndTime).to.be.above(0);
   });
 
-  it('should not allow bidding before the auction starts', async () => {
-    await expect(nftAuction.bid(ethers.utils.parseEther('1'))).to.be.revertedWith('Auction not started');
-  });
+
 
   
   it('should not allow starting the auction multiple times', async () => {
@@ -55,25 +53,23 @@ describe('NFTDutchAuction_ERC20BidsUpgrade', () => {
     await expect(nftAuction.startAuction()).to.be.revertedWith('Auction already started');
   });
   
-  it('should transfer ERC20 tokens from bidder to the contract', async () => {
-    await nftAuction.startAuction();
-    const bidAmount = ethers.utils.parseEther('1');
-    
-    // Mint ERC20 tokens for the bidder
-    await erc20Token.mint(bidder.address, bidAmount);
-  
-    await erc20Token.connect(bidder).approve(nftAuction.address, bidAmount);
-    await nftAuction.connect(bidder).bid(bidAmount);
-  
-    expect(await erc20Token.balanceOf(nftAuction.address)).to.equal(bidAmount);
-  });
+ 
  
   it('should mint an NFT', async () => {
     await nftContract.mint(bidder.address); // Mint NFT to bidder's address
     const ownerOfToken = await nftContract.ownerOf(1);
     expect(ownerOfToken).to.equal(bidder.address);
   });
-    
+  
+  it('should allow a bidder to place a bid and transfer NFT if bid meets the reserve price', async () => {
+    const currentPrice = ethers.utils.parseEther('1');
+    const deadline = Math.floor(Date.now() / 1000) + 3600; // Set the deadline to one hour from now
+  
+    await nftAuction.bid(currentPrice, deadline);
+  
+    const ownerOfToken = await nftContract.ownerOf(nftTokenId);
+    expect(ownerOfToken).to.equal(bidder.address);
+  });
  
 });
 

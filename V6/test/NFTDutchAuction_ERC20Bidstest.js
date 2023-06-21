@@ -73,8 +73,11 @@ describe('NFTDutchAuction_ERC20BidsUpgrade', () => {
     const ownerOfToken = await nftContract.ownerOf(1);
     expect(ownerOfToken).to.equal(bidder.address);
   });
-    
- 
+  
+  
+  
+  
+  
 });
 
 

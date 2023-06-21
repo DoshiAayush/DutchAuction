@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity >=0.8.0 <0.9.0;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 
 contract NFTDutchAuction_ERC20BidsUpgrade is
     OwnableUpgradeable,
-    UUPSUpgradeable
+    UUPSUpgradeable,
+    ERC20PermitUpgradeable
 {
     ERC721Upgradeable public nftContract;
     uint256 public nftTokenId;
@@ -29,6 +32,7 @@ contract NFTDutchAuction_ERC20BidsUpgrade is
     ) public initializer {
         __Ownable_init();
         __UUPSUpgradeable_init();
+        __ERC20Permit_init("NFTDutchAuction_ERC20BidsUpgrade");
 
         erc20Token = IERC20Upgradeable(_erc20TokenAddress);
         nftContract = ERC721Upgradeable(_erc721TokenAddress);
@@ -39,9 +43,9 @@ contract NFTDutchAuction_ERC20BidsUpgrade is
         auctionEndTime = 0;
     }
 
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        require(address(this) != newImplementation, "Cannot upgrade to the same implementation");
+    }
 
     function startAuction() external {
         require(auctionEndTime == 0, "Auction already started");
@@ -51,16 +55,9 @@ contract NFTDutchAuction_ERC20BidsUpgrade is
     function bid(uint256 currentPrice) external {
         require(auctionEndTime > 0, "Auction not started");
         require(block.number < auctionEndTime, "Auction has ended");
-        if (
-            currentPrice >= reservePrice ||
-            currentPrice >= auctionEndTime - block.number
-        ) {
-            // Bid meets either the reserve price or the time-based minimum price
-            nftContract.transferFrom(address(this), msg.sender, nftTokenId);
-        }
-        uint256 blocksRemaining = auctionEndTime - block.number - 1;
-        uint256 decrementAmount = (offerPriceDecrement * blocksRemaining) /
-            1e18;
+
+        uint256 blocksRemaining = auctionEndTime - block.number - 1; // Subtract 1 to account
+        uint256 decrementAmount = (offerPriceDecrement * blocksRemaining) / 1e18;
         uint256 updatedPrice = currentPrice - decrementAmount;
         auctionEndTime = block.number + blocksRemaining;
 
