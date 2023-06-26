@@ -16,7 +16,8 @@ contract NFTDutchAuction_ERC20BidsUpgrade is
     uint256 public numBlocksAuctionOpen;
     uint256 public offerPriceDecrement;
     uint256 public auctionEndTime;
-
+uint256 public finalPrice;
+uint256 public initialPrice;
     IERC20Upgradeable public erc20Token;
 
     function initialize(
@@ -36,34 +37,41 @@ contract NFTDutchAuction_ERC20BidsUpgrade is
         reservePrice = _reservePrice;
         numBlocksAuctionOpen = _numBlocksAuctionOpen;
         offerPriceDecrement = _offerPriceDecrement;
+
+initialPrice =
+            reservePrice +
+            numBlocksAuctionOpen *
+            offerPriceDecrement;
         auctionEndTime = 0;
     }
 
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override onlyOwner {}
+   function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function startAuction() external {
         require(auctionEndTime == 0, "Auction already started");
         auctionEndTime = block.number + numBlocksAuctionOpen;
     }
 
-    function bid(uint256 currentPrice) external {
-        require(auctionEndTime > 0, "Auction not started");
-        require(block.number < auctionEndTime, "Auction has ended");
-        if (
-            currentPrice >= reservePrice ||
-            currentPrice >= auctionEndTime - block.number
-        ) {
-            // Bid meets either the reserve price or the time-based minimum price
-            nftContract.transferFrom(address(this), msg.sender, nftTokenId);
-        }
-        uint256 blocksRemaining = auctionEndTime - block.number - 1;
-        uint256 decrementAmount = (offerPriceDecrement * blocksRemaining) /
-            1e18;
-        uint256 updatedPrice = currentPrice - decrementAmount;
-        auctionEndTime = block.number + blocksRemaining;
 
-        erc20Token.transferFrom(msg.sender, address(this), updatedPrice);
+function calculatePrice() public view returns (uint256) {
+       uint256 blocksRemaining = auctionEndTime - block.number - 1; // Subtract 1 to account for the current block
+        
+        if (block.number > blocksRemaining) {
+            return reservePrice;
+        }
+
+        return initialPrice - (block.number * offerPriceDecrement);
     }
+
+
+    function bid(uint256 currentPrice) external {
+    require(erc20Token.allowance(msg.sender, address(this)) >= currentPrice, "ERC20: insufficient allowance");
+   
+    
+    finalPrice = calculatePrice();
+    
+    erc20Token.transferFrom(msg.sender, address(this), currentPrice);
+    nftContract.transferFrom(address(this), msg.sender, nftTokenId);
+}
+
 }

@@ -159,9 +159,7 @@ it("should transfer the NFT to the winning bidder", async function () {
     // Ensure that the winning bidder is the new owner of the NFT
     const newOwner = await nftContract.ownerOf(newTokenId);
     expect(newOwner).to.equal(bidder.address);
-  } else {
-    console.log("No events found in receipt"); // Log a message if no events are present
-  }
+  } 
 });
 
 it("should transfer the NFT to the bidder when the current price meets reserve price and the bidder is the current owner", async function () {
@@ -194,9 +192,8 @@ it("should transfer the NFT to the bidder when the current price meets reserve p
     const currentOwnerAfterTransfer = await nftContract.ownerOf(newTokenId);
     expect(currentOwnerAfterTransfer).to.not.equal(owner.address);
     expect(currentOwnerAfterTransfer).to.equal(bidder.address);
-  } else {
-    console.log("No events found in receipt");
-  }
+  } 
+  
 });
 
 

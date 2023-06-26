@@ -7,12 +7,19 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 contract NFTContract is ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
+
+    event NFTMinted(address indexed recipient, uint256 tokenId);
+
     constructor() ERC721("NFTContract", "MET") {}
 
     function mint(address recipient) external returns (uint256) {
         _tokenIds.increment();
         uint256 newTokenId = _tokenIds.current();
-         _mint(recipient, newTokenId);
+        _safeMint(recipient, newTokenId);
+
+      
+
         return newTokenId;
     }
 }
+

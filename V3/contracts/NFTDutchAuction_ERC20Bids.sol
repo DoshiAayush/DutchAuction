@@ -37,18 +37,21 @@ contract NFTDutchAuction_ERC20Bids {
     }
 
     function bid(uint256 currentPrice) external {
-        require(auctionEndTime > 0, "Auction not started");
-        require(block.number < auctionEndTime, "Auction has ended");
-        if (currentPrice >= reservePrice || currentPrice >= auctionEndTime - block.number) {
-            // Bid meets either the reserve price or the time-based minimum price
-            nftContract.transferFrom(address(this), msg.sender, nftTokenId);
-        }
-        uint256 blocksRemaining = auctionEndTime - block.number - 1; // Subtract 1 to account for the current block
-        uint256 decrementAmount = (offerPriceDecrement * blocksRemaining) /
-            1e18;
-        uint256 updatedPrice = currentPrice - decrementAmount;
-        auctionEndTime = block.number + blocksRemaining;
-
-        erc20Token.transferFrom(msg.sender, address(this), updatedPrice);
+    require(auctionEndTime > 0, "Auction not started");
+    require(block.number < auctionEndTime, "Auction has ended");
+    require(erc20Token.allowance(msg.sender, address(this)) >= currentPrice, "ERC20: insufficient allowance");
+    
+    if (currentPrice >= reservePrice || currentPrice >= auctionEndTime - block.number) {
+        // Bid meets either the reserve price or the time-based minimum price
+        nftContract.transferFrom(address(this), msg.sender, nftTokenId);
     }
+    
+    uint256 blocksRemaining = auctionEndTime - block.number - 1; // Subtract 1 to account for the current block
+    uint256 decrementAmount = (offerPriceDecrement * blocksRemaining) / 1e18;
+    uint256 updatedPrice = currentPrice - decrementAmount;
+    auctionEndTime = block.number + blocksRemaining;
+
+    erc20Token.transferFrom(msg.sender, address(this), updatedPrice);
+}
+
 }
